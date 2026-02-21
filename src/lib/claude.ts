@@ -43,6 +43,14 @@ function parseXmlVariants(xmlText: string, format: TweetFormat): TweetVariant[] 
   });
 }
 
+function extractErrorMessage(err: unknown): string {
+  if (!(err instanceof Error)) return 'Unknown error';
+  // Anthropic SDK errors look like: "400 {"type":"error","error":{"message":"..."}}"
+  const match = err.message.match(/"message"\s*:\s*"([^"]+)"/);
+  if (match) return match[1];
+  return err.message;
+}
+
 export async function generateTweetVariants(
   post: SubstackPost,
   formats: TweetFormat[],
@@ -54,12 +62,17 @@ export async function generateTweetVariants(
   for (const format of formats) {
     const userPrompt = buildUserPrompt(post, format, tone, includeLink);
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userPrompt }],
-    });
+    let message;
+    try {
+      message = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      });
+    } catch (err) {
+      throw new Error(extractErrorMessage(err));
+    }
 
     const responseText = message.content
       .filter((block) => block.type === 'text')
