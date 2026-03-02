@@ -40,3 +40,14 @@ export interface PostTweetResponse {
   tweetId?: string;
   error?: string;
 }
+
+export interface PostThreadsRequest {
+  tweets: string[];
+  format: TweetFormat;
+}
+
+export interface PostThreadsResponse {
+  success: boolean;
+  threadId?: string;
+  error?: string;
+}

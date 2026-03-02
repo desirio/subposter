@@ -30,12 +30,21 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const [isPosting, setIsPosting] = useState(false);
   const [isTwitterConfigured, setIsTwitterConfigured] = useState(false);
+  const [activePlatform, setActivePlatform] = useState<'x' | 'threads'>('x');
+  const [isThreadsConfigured, setIsThreadsConfigured] = useState(false);
 
   useEffect(() => {
     fetch('/api/post-tweet')
       .then((r) => r.json())
       .then((data) => setIsTwitterConfigured(data.configured ?? false))
       .catch(() => setIsTwitterConfigured(false));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/post-threads')
+      .then((r) => r.json())
+      .then((data) => setIsThreadsConfigured(data.configured ?? false))
+      .catch(() => setIsThreadsConfigured(false));
   }, []);
 
   function toggleFormat(fmt: TweetFormat) {
@@ -70,14 +79,16 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
     setIsPosting(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/post-tweet', {
+      const endpoint = activePlatform === 'x' ? '/api/post-tweet' : '/api/post-threads';
+      const successMessage = activePlatform === 'x' ? 'Successfully posted to X!' : 'Successfully posted to Threads!';
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tweets, format }),
       });
       const data = await res.json();
       if (data.success) {
-        setStatus({ type: 'success', message: 'Successfully posted to X!' });
+        setStatus({ type: 'success', message: successMessage });
       } else {
         setStatus({ type: 'error', message: data.error || 'Failed to post' });
       }
@@ -87,6 +98,8 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
       setIsPosting(false);
     }
   }
+
+  const isConfigured = activePlatform === 'x' ? isTwitterConfigured : isThreadsConfigured;
 
   const singleVariants = variants.filter((v) => v.format === 'single');
   const threadVariants = variants.filter((v) => v.format === 'thread');
@@ -130,7 +143,7 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
                   className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-500 cursor-pointer"
                 />
                 <span className="text-sm text-gray-300 capitalize">
-                  {fmt === 'single' ? 'Single Tweet' : 'Thread'}
+                  {fmt === 'single' ? 'Single Post' : 'Thread'}
                 </span>
               </label>
             ))}
@@ -174,9 +187,12 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
               Generating...
             </span>
           ) : (
-            'Generate Tweets'
+            'Generate Variants'
           )}
         </button>
+        <p className="text-xs text-gray-500 text-center">
+          Generate once — then choose to post to X or Threads
+        </p>
       </div>
 
       {error && (
@@ -196,7 +212,24 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
       {/* Results */}
       {variants.length > 0 && (
         <div>
-          {/* Tabs */}
+          {/* Platform tab switcher */}
+          <div className="flex gap-1 mb-3 p-1 bg-gray-900 border border-gray-700 rounded-lg">
+            {(['x', 'threads'] as const).map((platform) => (
+              <button
+                key={platform}
+                onClick={() => setActivePlatform(platform)}
+                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  activePlatform === platform
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                {platform === 'x' ? 'X' : 'Threads'}
+              </button>
+            ))}
+          </div>
+
+          {/* Format Tabs */}
           <div className="flex gap-1 mb-3">
             {(['all', ...(singleVariants.length > 0 ? ['single'] : []), ...(threadVariants.length > 0 ? ['thread'] : [])] as TabValue[]).map((tab) => (
               <button
@@ -208,7 +241,7 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
               >
-                {tab === 'all' ? 'All' : tab === 'single' ? 'Single Tweets' : 'Threads'}
+                {tab === 'all' ? 'All' : tab === 'single' ? 'Single Posts' : 'Threads'}
               </button>
             ))}
           </div>
@@ -222,7 +255,8 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
                   variant={variant}
                   onPost={handlePost}
                   isPosting={isPosting}
-                  isTwitterConfigured={isTwitterConfigured}
+                  isConfigured={isConfigured}
+                  platform={activePlatform}
                 />
               ) : (
                 <ThreadPreview
@@ -230,7 +264,8 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
                   variant={variant}
                   onPost={handlePost}
                   isPosting={isPosting}
-                  isTwitterConfigured={isTwitterConfigured}
+                  isConfigured={isConfigured}
+                  platform={activePlatform}
                 />
               )
             )}

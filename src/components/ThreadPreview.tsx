@@ -7,10 +7,11 @@ interface ThreadPreviewProps {
   variant: TweetVariant;
   onPost: (tweets: string[], format: TweetFormat) => Promise<void>;
   isPosting: boolean;
-  isTwitterConfigured: boolean;
+  isConfigured: boolean;
+  platform: 'x' | 'threads';
 }
 
-export default function ThreadPreview({ variant, onPost, isPosting, isTwitterConfigured }: ThreadPreviewProps) {
+export default function ThreadPreview({ variant, onPost, isPosting, isConfigured, platform }: ThreadPreviewProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -70,13 +71,13 @@ export default function ThreadPreview({ variant, onPost, isPosting, isTwitterCon
         >
           {copied ? '✓ Copied' : 'Copy All'}
         </button>
-        {isTwitterConfigured && (
+        {isConfigured && (
           <button
             onClick={handlePost}
             disabled={isPosting}
             className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs font-medium rounded-lg transition-colors"
           >
-            {isPosting ? 'Posting...' : 'Post Thread to X'}
+            {isPosting ? 'Posting...' : platform === 'x' ? 'Post Thread to X' : 'Post Thread to Threads'}
           </button>
         )}
       </div>
