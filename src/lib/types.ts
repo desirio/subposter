@@ -51,3 +51,14 @@ export interface PostThreadsResponse {
   threadId?: string;
   error?: string;
 }
+
+export interface PostLinkedInRequest {
+  tweets: string[];
+  format: TweetFormat;
+}
+
+export interface PostLinkedInResponse {
+  success: boolean;
+  postId?: string;
+  error?: string;
+}

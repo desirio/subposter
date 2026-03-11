@@ -8,7 +8,7 @@ interface TweetPreviewProps {
   onPost: (tweets: string[], format: TweetFormat) => Promise<void>;
   isPosting: boolean;
   isConfigured: boolean;
-  platform: 'x' | 'threads';
+  platform: 'x' | 'threads' | 'linkedin';
 }
 
 function CharCountBar({ count }: { count: number }) {
@@ -80,7 +80,7 @@ export default function TweetPreview({ variant, onPost, isPosting, isConfigured,
             disabled={isPosting || isOverLimit}
             className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs font-medium rounded-lg transition-colors"
           >
-            {isPosting ? 'Posting...' : platform === 'x' ? 'Post to X' : 'Post to Threads'}
+            {isPosting ? 'Posting...' : platform === 'x' ? 'Post to X' : platform === 'threads' ? 'Post to Threads' : 'Post to LinkedIn'}
           </button>
         )}
       </div>
