@@ -30,8 +30,9 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const [isPosting, setIsPosting] = useState(false);
   const [isTwitterConfigured, setIsTwitterConfigured] = useState(false);
-  const [activePlatform, setActivePlatform] = useState<'x' | 'threads'>('x');
+  const [activePlatform, setActivePlatform] = useState<'x' | 'threads' | 'linkedin'>('x');
   const [isThreadsConfigured, setIsThreadsConfigured] = useState(false);
+  const [isLinkedInConfigured, setIsLinkedInConfigured] = useState(false);
 
   useEffect(() => {
     fetch('/api/post-tweet')
@@ -45,6 +46,13 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
       .then((r) => r.json())
       .then((data) => setIsThreadsConfigured(data.configured ?? false))
       .catch(() => setIsThreadsConfigured(false));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/post-linkedin')
+      .then((r) => r.json())
+      .then((data) => setIsLinkedInConfigured(data.configured ?? false))
+      .catch(() => setIsLinkedInConfigured(false));
   }, []);
 
   function toggleFormat(fmt: TweetFormat) {
@@ -79,8 +87,14 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
     setIsPosting(true);
     setStatus(null);
     try {
-      const endpoint = activePlatform === 'x' ? '/api/post-tweet' : '/api/post-threads';
-      const successMessage = activePlatform === 'x' ? 'Successfully posted to X!' : 'Successfully posted to Threads!';
+      const endpoint =
+        activePlatform === 'x' ? '/api/post-tweet' :
+        activePlatform === 'threads' ? '/api/post-threads' :
+        '/api/post-linkedin';
+      const successMessage =
+        activePlatform === 'x' ? 'Successfully posted to X!' :
+        activePlatform === 'threads' ? 'Successfully posted to Threads!' :
+        'Successfully posted to LinkedIn!';
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,7 +113,10 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
     }
   }
 
-  const isConfigured = activePlatform === 'x' ? isTwitterConfigured : isThreadsConfigured;
+  const isConfigured =
+    activePlatform === 'x' ? isTwitterConfigured :
+    activePlatform === 'threads' ? isThreadsConfigured :
+    isLinkedInConfigured;
 
   const singleVariants = variants.filter((v) => v.format === 'single');
   const threadVariants = variants.filter((v) => v.format === 'thread');
@@ -148,6 +165,7 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
               </label>
             ))}
           </div>
+          <p className="text-xs text-gray-600 mt-1">Thread format is not supported on LinkedIn</p>
         </div>
 
         {/* Tone selector */}
@@ -191,7 +209,7 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
           )}
         </button>
         <p className="text-xs text-gray-500 text-center">
-          Generate once — then choose to post to X or Threads
+          Generate once — then choose to post to X, Threads, or LinkedIn
         </p>
       </div>
 
@@ -214,7 +232,7 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
         <div>
           {/* Platform tab switcher */}
           <div className="flex gap-1 mb-3 p-1 bg-gray-900 border border-gray-700 rounded-lg">
-            {(['x', 'threads'] as const).map((platform) => (
+            {(['x', 'threads', 'linkedin'] as const).map((platform) => (
               <button
                 key={platform}
                 onClick={() => setActivePlatform(platform)}
@@ -224,14 +242,14 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
                     : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
-                {platform === 'x' ? 'X' : 'Threads'}
+                {platform === 'x' ? 'X' : platform === 'threads' ? 'Threads' : 'LinkedIn'}
               </button>
             ))}
           </div>
 
           {/* Format Tabs */}
           <div className="flex gap-1 mb-3">
-            {(['all', ...(singleVariants.length > 0 ? ['single'] : []), ...(threadVariants.length > 0 ? ['thread'] : [])] as TabValue[]).map((tab) => (
+            {(['all', ...(singleVariants.length > 0 ? ['single'] : []), ...(threadVariants.length > 0 && activePlatform !== 'linkedin' ? ['thread'] : [])] as TabValue[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

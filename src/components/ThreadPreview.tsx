@@ -8,7 +8,7 @@ interface ThreadPreviewProps {
   onPost: (tweets: string[], format: TweetFormat) => Promise<void>;
   isPosting: boolean;
   isConfigured: boolean;
-  platform: 'x' | 'threads';
+  platform: 'x' | 'threads' | 'linkedin';
 }
 
 export default function ThreadPreview({ variant, onPost, isPosting, isConfigured, platform }: ThreadPreviewProps) {
@@ -64,6 +64,12 @@ export default function ThreadPreview({ variant, onPost, isPosting, isConfigured
         </button>
       )}
 
+      {platform === 'linkedin' && (
+        <p className="mt-3 text-xs text-amber-500/80">
+          LinkedIn doesn&apos;t support threads. Switch to a Single Post variant to post here.
+        </p>
+      )}
+
       <div className="flex gap-2 mt-3">
         <button
           onClick={handleCopyAll}
@@ -71,7 +77,7 @@ export default function ThreadPreview({ variant, onPost, isPosting, isConfigured
         >
           {copied ? '✓ Copied' : 'Copy All'}
         </button>
-        {isConfigured && (
+        {isConfigured && platform !== 'linkedin' && (
           <button
             onClick={handlePost}
             disabled={isPosting}
