@@ -247,8 +247,9 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
             ))}
           </div>
 
-          {/* Format Tabs */}
-          <div className="flex gap-1 mb-3">
+          {/* Format Tabs + Regenerate */}
+          <div className="flex items-center justify-between mb-3">
+          <div className="flex gap-1">
             {(['all', ...(singleVariants.length > 0 ? ['single'] : []), ...(threadVariants.length > 0 && activePlatform !== 'linkedin' ? ['thread'] : [])] as TabValue[]).map((tab) => (
               <button
                 key={tab}
@@ -262,6 +263,14 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
                 {tab === 'all' ? 'All' : tab === 'single' ? 'Single Posts' : 'Threads'}
               </button>
             ))}
+          </div>
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors"
+            >
+              {loading ? 'Generating...' : '↺ Regenerate'}
+            </button>
           </div>
 
           {/* Variant cards */}
