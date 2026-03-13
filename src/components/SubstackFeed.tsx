@@ -43,7 +43,7 @@ export default function SubstackFeed({ onPostSelect, selectedPost }: SubstackFee
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Substack URL or feed URL..."
+          placeholder="Substack, Medium, or any blog URL..."
           className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
         />
         <button
@@ -70,8 +70,8 @@ export default function SubstackFeed({ onPostSelect, selectedPost }: SubstackFee
 
       {!loading && posts.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-12 text-gray-500 text-sm text-center">
-          <p>Enter a Substack URL and click Load</p>
-          <p className="text-xs mt-1 text-gray-600">e.g. https://example.substack.com</p>
+          <p>Enter a publication or article URL and click Load</p>
+          <p className="text-xs mt-1 text-gray-600">Supports Substack, Medium, and most blogs</p>
         </div>
       )}
 
