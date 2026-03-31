@@ -7,3 +7,5 @@ services:
       - .env.local
     environment:
       - NODE_ENV=production
+    volumes:
+      - ./skills:/app/skills:ro

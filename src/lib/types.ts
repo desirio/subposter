@@ -62,3 +62,49 @@ export interface PostLinkedInResponse {
   postId?: string;
   error?: string;
 }
+
+// --- Agent types ---
+
+export type ContentStatus = 'draft' | 'approved' | 'posted' | 'rejected';
+
+export interface Skill {
+  name: string;
+  description: string;
+  triggers: string[];
+  body: string;
+}
+
+export interface AgentMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  generatedContent?: GeneratedContent[];
+  timestamp: number;
+}
+
+export interface GeneratedContent {
+  id: string;
+  variants: ContentVariant[];
+  sourceArticle?: { title: string; link: string };
+  skill: string;
+}
+
+export interface ContentVariant extends TweetVariant {
+  status: ContentStatus;
+  platform?: 'x' | 'threads' | 'linkedin';
+}
+
+export interface AgentChatRequest {
+  message: string;
+  sessionId?: string;
+  context?: {
+    selectedPost?: SubstackPost;
+    substackUrl?: string;
+  };
+}
+
+export interface AgentChatResponse {
+  message: AgentMessage;
+  sessionId: string;
+  error?: string;
+}
