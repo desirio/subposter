@@ -58,5 +58,5 @@ Restart the dev server after updating environment variables.
 ## Notes
 
 - Long-lived tokens expire after 60 days. Refresh them before expiry using the `th_refresh_token` grant type.
-- The app must be in **Live** mode (not Development) to post from accounts other than the app owner's.
+- The app must be in Live mode (not Development) to post from accounts other than the app owner's.
 - Rate limits: 250 posts per 24 hours per user.
