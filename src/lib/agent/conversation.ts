@@ -1,50 +1,67 @@
 import { AgentMessage } from '../types';
+import { createClient } from '../supabase/server';
 
-interface ConversationState {
-  messages: AgentMessage[];
-  createdAt: number;
-}
-
-const sessions = new Map<string, ConversationState>();
 const MAX_MESSAGES = 20;
-const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
 
-export function getOrCreateSession(sessionId: string): ConversationState {
-  let session = sessions.get(sessionId);
-  if (!session) {
-    session = { messages: [], createdAt: Date.now() };
-    sessions.set(sessionId, session);
+export async function getOrCreateSession(
+  sessionId: string,
+  userId: string
+): Promise<{ id: string; messages: AgentMessage[] }> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('agent_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .eq('user_id', userId)
+    .single();
+
+  if (data) {
+    return { id: data.id, messages: (data.messages as AgentMessage[]) ?? [] };
   }
-  return session;
+
+  const { data: newSession, error } = await supabase
+    .from('agent_sessions')
+    .insert({ id: sessionId, user_id: userId, messages: [] })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { id: newSession.id, messages: [] };
 }
 
-export function addMessage(sessionId: string, message: AgentMessage): void {
-  const session = getOrCreateSession(sessionId);
-  session.messages.push(message);
-  if (session.messages.length > MAX_MESSAGES) {
-    session.messages = session.messages.slice(-MAX_MESSAGES);
-  }
+export async function addMessage(
+  sessionId: string,
+  userId: string,
+  message: AgentMessage
+): Promise<void> {
+  const session = await getOrCreateSession(sessionId, userId);
+  const messages = [...session.messages, message].slice(-MAX_MESSAGES);
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('agent_sessions')
+    .update({ messages, updated_at: new Date().toISOString() })
+    .eq('id', sessionId)
+    .eq('user_id', userId);
+
+  if (error) throw error;
 }
 
-export function getMessages(sessionId: string): AgentMessage[] {
-  return getOrCreateSession(sessionId).messages;
+export async function getMessages(
+  sessionId: string,
+  userId: string
+): Promise<AgentMessage[]> {
+  const session = await getOrCreateSession(sessionId, userId);
+  return session.messages;
 }
 
-export function toClaudeMessages(
-  sessionId: string
-): Array<{ role: 'user' | 'assistant'; content: string }> {
-  return getMessages(sessionId).map((m) => ({
+export async function toClaudeMessages(
+  sessionId: string,
+  userId: string
+): Promise<Array<{ role: 'user' | 'assistant'; content: string }>> {
+  const messages = await getMessages(sessionId, userId);
+  return messages.map((m) => ({
     role: m.role,
     content: m.text + (m.generatedContent ? '\n\n[Generated content attached]' : ''),
   }));
-}
-
-// Periodic cleanup of expired sessions
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    sessions.forEach((session, id) => {
-      if (now - session.createdAt > SESSION_TTL) sessions.delete(id);
-    });
-  }, 5 * 60 * 1000);
 }

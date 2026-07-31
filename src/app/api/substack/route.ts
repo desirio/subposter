@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchSubstackPosts } from '@/lib/substack';
+import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
+  const user = await getAuthenticatedUser();
+  if (!user) return unauthorizedResponse();
+
   const url = request.nextUrl.searchParams.get('url');
 
   if (!url) {

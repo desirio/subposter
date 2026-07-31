@@ -1,30 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { SubstackPost } from '@/lib/types';
 import SubstackFeed from '@/components/SubstackFeed';
 import GeneratePanel from '@/components/GeneratePanel';
 import AgentChat from '@/components/AgentChat';
+import { useAuth } from '@/components/AuthProvider';
 
 type MainTab = 'feed' | 'agent';
 
 export default function Home() {
+  const { user, signOut } = useAuth();
   const [selectedPost, setSelectedPost] = useState<SubstackPost | null>(null);
   const [activeTab, setActiveTab] = useState<MainTab>('agent');
   const [platformConfig, setPlatformConfig] = useState({ x: false, threads: false, linkedin: false });
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/post-tweet').then((r) => r.json()).catch(() => ({ configured: false })),
-      fetch('/api/post-threads').then((r) => r.json()).catch(() => ({ configured: false })),
-      fetch('/api/post-linkedin').then((r) => r.json()).catch(() => ({ configured: false })),
-    ]).then(([x, threads, linkedin]) => {
-      setPlatformConfig({
-        x: x.configured ?? false,
-        threads: threads.configured ?? false,
-        linkedin: linkedin.configured ?? false,
-      });
-    });
+    fetch('/api/connections')
+      .then((r) => r.json())
+      .then((data) => {
+        const connections = data.connections ?? [];
+        setPlatformConfig({
+          x: connections.some((c: { platform: string }) => c.platform === 'x'),
+          threads: connections.some((c: { platform: string }) => c.platform === 'threads'),
+          linkedin: connections.some((c: { platform: string }) => c.platform === 'linkedin'),
+        });
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -63,22 +66,40 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Platform connection status */}
-          <div className="flex items-center gap-3">
-            {[
-              { key: 'x', label: 'X', connected: platformConfig.x },
-              { key: 'threads', label: 'Threads', connected: platformConfig.threads },
-              { key: 'linkedin', label: 'LinkedIn', connected: platformConfig.linkedin },
-            ].map(({ key, label, connected }) => (
-              <div key={key} className="flex items-center gap-1.5">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    connected ? 'bg-green-500' : 'bg-gray-600'
-                  }`}
-                />
-                <span className="text-xs text-gray-500">{label}</span>
-              </div>
-            ))}
+          {/* Platform connection status + user menu */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              {[
+                { key: 'x', label: 'X', connected: platformConfig.x },
+                { key: 'threads', label: 'Threads', connected: platformConfig.threads },
+                { key: 'linkedin', label: 'LinkedIn', connected: platformConfig.linkedin },
+              ].map(({ key, label, connected }) => (
+                <div key={key} className="flex items-center gap-1.5">
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      connected ? 'bg-green-500' : 'bg-gray-600'
+                    }`}
+                  />
+                  <span className="text-xs text-gray-500">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 pl-3 border-l border-gray-800">
+              <span className="text-xs text-gray-500 hidden sm:inline">{user?.email}</span>
+              <Link
+                href="/settings"
+                className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                Settings
+              </Link>
+              <button
+                onClick={signOut}
+                className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                Sign out
+              </button>
+            </div>
           </div>
         </div>
       </header>

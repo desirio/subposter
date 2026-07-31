@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTweetVariants } from '@/lib/claude';
 import { GenerateRequest } from '@/lib/types';
+import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
+  const user = await getAuthenticatedUser();
+  if (!user) return unauthorizedResponse();
+
   try {
     const body: GenerateRequest = await request.json();
     const { post, formats, tone, includeLink } = body;

@@ -1,22 +1,27 @@
 import { PostThreadsResponse } from './types';
 
-const { THREADS_ACCESS_TOKEN, THREADS_USER_ID } = process.env;
-
 const BASE_URL = 'https://graph.threads.net/v1.0';
 
-export const isThreadsConfigured = Boolean(THREADS_ACCESS_TOKEN && THREADS_USER_ID);
+export interface ThreadsCredentials {
+  accessToken: string;
+  userId: string;
+}
 
-async function createContainer(text: string, replyToId?: string): Promise<string> {
+async function createContainer(
+  text: string,
+  creds: ThreadsCredentials,
+  replyToId?: string
+): Promise<string> {
   const params = new URLSearchParams({
     text,
     media_type: 'TEXT',
-    access_token: THREADS_ACCESS_TOKEN!,
+    access_token: creds.accessToken,
   });
   if (replyToId) {
     params.set('reply_to_id', replyToId);
   }
 
-  const res = await fetch(`${BASE_URL}/${THREADS_USER_ID}/threads`, {
+  const res = await fetch(`${BASE_URL}/${creds.userId}/threads`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
@@ -31,13 +36,16 @@ async function createContainer(text: string, replyToId?: string): Promise<string
   return data.id as string;
 }
 
-async function publishContainer(creationId: string): Promise<string> {
+async function publishContainer(
+  creationId: string,
+  creds: ThreadsCredentials
+): Promise<string> {
   const params = new URLSearchParams({
     creation_id: creationId,
-    access_token: THREADS_ACCESS_TOKEN!,
+    access_token: creds.accessToken,
   });
 
-  const res = await fetch(`${BASE_URL}/${THREADS_USER_ID}/threads_publish`, {
+  const res = await fetch(`${BASE_URL}/${creds.userId}/threads_publish`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
@@ -52,13 +60,13 @@ async function publishContainer(creationId: string): Promise<string> {
   return data.id as string;
 }
 
-export async function postSingleThreadsPost(text: string): Promise<PostThreadsResponse> {
-  if (!isThreadsConfigured) {
-    return { success: false, error: 'Threads API not configured' };
-  }
+export async function postSingleThreadsPost(
+  text: string,
+  creds: ThreadsCredentials
+): Promise<PostThreadsResponse> {
   try {
-    const creationId = await createContainer(text);
-    const threadId = await publishContainer(creationId);
+    const creationId = await createContainer(text, creds);
+    const threadId = await publishContainer(creationId, creds);
     return { success: true, threadId };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -66,17 +74,17 @@ export async function postSingleThreadsPost(text: string): Promise<PostThreadsRe
   }
 }
 
-export async function postThreadsThread(tweets: string[]): Promise<PostThreadsResponse> {
-  if (!isThreadsConfigured) {
-    return { success: false, error: 'Threads API not configured' };
-  }
+export async function postThreadsThread(
+  tweets: string[],
+  creds: ThreadsCredentials
+): Promise<PostThreadsResponse> {
   try {
     let previousId: string | undefined;
     let firstId: string | undefined;
 
     for (const text of tweets) {
-      const creationId = await createContainer(text, previousId);
-      const publishedId = await publishContainer(creationId);
+      const creationId = await createContainer(text, creds, previousId);
+      const publishedId = await publishContainer(creationId, creds);
       if (!firstId) firstId = publishedId;
       previousId = publishedId;
     }
