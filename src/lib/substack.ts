@@ -15,7 +15,7 @@ function stripHtml(html: string): string {
   return $.text().trim();
 }
 
-function normalizeFeedUrl(url: string): string {
+export function normalizeFeedUrl(url: string): string {
   try {
     const parsed = new URL(url);
     const { hostname, pathname } = parsed;
@@ -101,7 +101,50 @@ async function fetchWithReadability(url: string): Promise<SubstackPost> {
   };
 }
 
+/**
+ * Detect whether a URL points to a single article rather than a feed/homepage.
+ */
+export function isArticleUrl(url: string): boolean {
+  try {
+    const { hostname, pathname } = new URL(url);
+
+    // Substack: /p/article-slug
+    if (hostname.endsWith('.substack.com') || hostname === 'substack.com') {
+      if (/\/p\/[^/]+/.test(pathname)) return true;
+    }
+
+    // Medium: /@user/title-hexsuffix or /publication/title-hexsuffix
+    if (hostname === 'medium.com' || hostname.endsWith('.medium.com')) {
+      // Article slugs end with a hex ID (at least 10 hex chars)
+      if (/\/[^/]+-[0-9a-f]{10,}$/i.test(pathname)) return true;
+    }
+
+    // Generic blog article patterns
+    if (/^\/(posts|blog|article|articles)\/.+/i.test(pathname)) return true;
+
+    // Date-based paths: /2024/01/slug or /2024/01/15/slug
+    if (/^\/\d{4}\/\d{2}(\/\d{2})?\/.+/.test(pathname)) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchSubstackPosts(url: string): Promise<SubstackPost[]> {
+  // If it's a direct article URL, skip RSS and extract just this article
+  if (isArticleUrl(url)) {
+    try {
+      const post = await fetchWithReadability(url);
+      return [post];
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `Could not load article from ${url}. (${msg})`
+      );
+    }
+  }
+
   const feedUrl = normalizeFeedUrl(url);
 
   // Try RSS first

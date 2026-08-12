@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
+import PostHistory from '@/components/PostHistory'
 
 interface Connection {
   platform: string
@@ -170,6 +171,11 @@ export default function SettingsPage() {
           {loading && (
             <p className="text-xs text-gray-600 mt-2">Loading connections...</p>
           )}
+        </section>
+
+        {/* Scheduled & Past Posts */}
+        <section>
+          <PostHistory />
         </section>
       </main>
     </div>
