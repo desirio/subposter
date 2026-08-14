@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isThreadsConfigured, postSingleThreadsPost, postThreadsThread } from '@/lib/threads';
+import { postSingleThreadsPost, postThreadsThread } from '@/lib/threads';
 import { PostThreadsRequest } from '@/lib/types';
+import { getAuthenticatedUser, getUserPlatformTokens, unauthorizedResponse, notConnectedResponse } from '@/lib/auth-helpers';
 
 export async function GET() {
-  return NextResponse.json({ configured: isThreadsConfigured });
+  const user = await getAuthenticatedUser();
+  if (!user) return unauthorizedResponse();
+  const tokens = await getUserPlatformTokens(user.id, 'threads');
+  return NextResponse.json({ configured: !!tokens });
 }
 
 export async function POST(request: NextRequest) {
-  if (!isThreadsConfigured) {
-    return NextResponse.json(
-      { success: false, error: 'Threads API not configured' },
-      { status: 503 }
-    );
-  }
+  const user = await getAuthenticatedUser();
+  if (!user) return unauthorizedResponse();
+
+  const tokens = await getUserPlatformTokens(user.id, 'threads');
+  if (!tokens) return notConnectedResponse('Threads');
 
   try {
     const body: PostThreadsRequest = await request.json();
@@ -22,9 +25,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'tweets array is required' }, { status: 400 });
     }
 
+    const creds = { accessToken: tokens.accessToken, userId: tokens.platformUserId! };
     const result = format === 'single'
-      ? await postSingleThreadsPost(tweets[0])
-      : await postThreadsThread(tweets);
+      ? await postSingleThreadsPost(tweets[0], creds)
+      : await postThreadsThread(tweets, creds);
 
     return NextResponse.json(result);
   } catch (err: unknown) {

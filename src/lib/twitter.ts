@@ -1,35 +1,20 @@
 import { TwitterApi } from 'twitter-api-v2';
 import { PostTweetResponse } from './types';
 
-const {
-  TWITTER_API_KEY,
-  TWITTER_API_SECRET,
-  TWITTER_ACCESS_TOKEN,
-  TWITTER_ACCESS_TOKEN_SECRET,
-} = process.env;
-
-export const isTwitterConfigured = Boolean(
-  TWITTER_API_KEY &&
-  TWITTER_API_SECRET &&
-  TWITTER_ACCESS_TOKEN &&
-  TWITTER_ACCESS_TOKEN_SECRET
-);
-
-function createClient(): TwitterApi {
-  return new TwitterApi({
-    appKey: TWITTER_API_KEY!,
-    appSecret: TWITTER_API_SECRET!,
-    accessToken: TWITTER_ACCESS_TOKEN!,
-    accessSecret: TWITTER_ACCESS_TOKEN_SECRET!,
-  });
+export interface TwitterCredentials {
+  accessToken: string;
 }
 
-export async function postSingleTweet(text: string): Promise<PostTweetResponse> {
-  if (!isTwitterConfigured) {
-    return { success: false, error: 'X API not configured' };
-  }
+function createClientWithToken(creds: TwitterCredentials): TwitterApi {
+  return new TwitterApi(creds.accessToken);
+}
+
+export async function postSingleTweet(
+  text: string,
+  creds: TwitterCredentials
+): Promise<PostTweetResponse> {
   try {
-    const client = createClient();
+    const client = createClientWithToken(creds);
     const result = await client.v2.tweet(text);
     return { success: true, tweetId: result.data.id };
   } catch (err: unknown) {
@@ -38,12 +23,12 @@ export async function postSingleTweet(text: string): Promise<PostTweetResponse> 
   }
 }
 
-export async function postThread(tweets: string[]): Promise<PostTweetResponse> {
-  if (!isTwitterConfigured) {
-    return { success: false, error: 'X API not configured' };
-  }
+export async function postThread(
+  tweets: string[],
+  creds: TwitterCredentials
+): Promise<PostTweetResponse> {
   try {
-    const client = createClient();
+    const client = createClientWithToken(creds);
     let previousId: string | undefined;
     let firstId: string | undefined;
 

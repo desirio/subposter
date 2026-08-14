@@ -90,10 +90,11 @@ function extractConversationalText(text: string): string {
 }
 
 export async function handleAgentMessage(
-  request: AgentChatRequest
+  request: AgentChatRequest,
+  userId: string
 ): Promise<{ message: AgentMessage; sessionId: string }> {
   const sessionId = request.sessionId || uuid();
-  getOrCreateSession(sessionId);
+  await getOrCreateSession(sessionId, userId);
 
   // Add user message
   const userMsg: AgentMessage = {
@@ -102,7 +103,7 @@ export async function handleAgentMessage(
     text: request.message,
     timestamp: Date.now(),
   };
-  addMessage(sessionId, userMsg);
+  await addMessage(sessionId, userId, userMsg);
 
   // Route to skill
   const skill = await routeToSkill(request.message);
@@ -122,7 +123,7 @@ export async function handleAgentMessage(
   const systemPrompt = buildSystemPrompt(skill.body, { selectedPost });
 
   // Build conversation history for Claude
-  const conversationMessages = toClaudeMessages(sessionId);
+  const conversationMessages = await toClaudeMessages(sessionId, userId);
   // Remove the last message (we just added it) — it'll be the current user turn
   const history = conversationMessages.slice(0, -1);
   const messages = [...history, { role: 'user' as const, content: request.message }];
@@ -155,7 +156,7 @@ export async function handleAgentMessage(
     generatedContent: generatedContent.length > 0 ? generatedContent : undefined,
     timestamp: Date.now(),
   };
-  addMessage(sessionId, assistantMsg);
+  await addMessage(sessionId, userId, assistantMsg);
 
   return { message: assistantMsg, sessionId };
 }

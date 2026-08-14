@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isLinkedInConfigured, postToLinkedIn } from '@/lib/linkedin';
+import { postToLinkedIn } from '@/lib/linkedin';
 import { PostLinkedInRequest } from '@/lib/types';
+import { getAuthenticatedUser, getUserPlatformTokens, unauthorizedResponse, notConnectedResponse } from '@/lib/auth-helpers';
 
 export async function GET() {
-  return NextResponse.json({ configured: isLinkedInConfigured });
+  const user = await getAuthenticatedUser();
+  if (!user) return unauthorizedResponse();
+  const tokens = await getUserPlatformTokens(user.id, 'linkedin');
+  return NextResponse.json({ configured: !!tokens });
 }
 
 export async function POST(request: NextRequest) {
-  if (!isLinkedInConfigured) {
-    return NextResponse.json(
-      { success: false, error: 'LinkedIn API not configured' },
-      { status: 503 }
-    );
-  }
+  const user = await getAuthenticatedUser();
+  if (!user) return unauthorizedResponse();
+
+  const tokens = await getUserPlatformTokens(user.id, 'linkedin');
+  if (!tokens) return notConnectedResponse('LinkedIn');
 
   try {
     const body: PostLinkedInRequest = await request.json();
@@ -22,7 +25,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'tweets array is required' }, { status: 400 });
     }
 
-    const result = await postToLinkedIn(tweets[0]);
+    const creds = { accessToken: tokens.accessToken, personUrn: tokens.platformUserId! };
+    const result = await postToLinkedIn(tweets[0], creds);
     return NextResponse.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to post to LinkedIn';

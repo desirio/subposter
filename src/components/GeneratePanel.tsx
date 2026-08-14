@@ -35,24 +35,15 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
   const [isLinkedInConfigured, setIsLinkedInConfigured] = useState(false);
 
   useEffect(() => {
-    fetch('/api/post-tweet')
+    fetch('/api/connections')
       .then((r) => r.json())
-      .then((data) => setIsTwitterConfigured(data.configured ?? false))
-      .catch(() => setIsTwitterConfigured(false));
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/post-threads')
-      .then((r) => r.json())
-      .then((data) => setIsThreadsConfigured(data.configured ?? false))
-      .catch(() => setIsThreadsConfigured(false));
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/post-linkedin')
-      .then((r) => r.json())
-      .then((data) => setIsLinkedInConfigured(data.configured ?? false))
-      .catch(() => setIsLinkedInConfigured(false));
+      .then((data) => {
+        const connections = data.connections ?? [];
+        setIsTwitterConfigured(connections.some((c: { platform: string }) => c.platform === 'x'));
+        setIsThreadsConfigured(connections.some((c: { platform: string }) => c.platform === 'threads'));
+        setIsLinkedInConfigured(connections.some((c: { platform: string }) => c.platform === 'linkedin'));
+      })
+      .catch(() => {});
   }, []);
 
   function toggleFormat(fmt: TweetFormat) {

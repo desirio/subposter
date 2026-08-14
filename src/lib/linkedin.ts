@@ -1,23 +1,24 @@
 import { PostLinkedInResponse } from './types';
 
-const { LINKEDIN_ACCESS_TOKEN, LINKEDIN_PERSON_URN } = process.env;
-
 const BASE_URL = 'https://api.linkedin.com/rest';
 const LINKEDIN_VERSION = '202601';
 
-export const isLinkedInConfigured = Boolean(LINKEDIN_ACCESS_TOKEN && LINKEDIN_PERSON_URN);
+export interface LinkedInCredentials {
+  accessToken: string;
+  personUrn: string;
+}
 
-async function createPost(text: string): Promise<string> {
+async function createPost(text: string, creds: LinkedInCredentials): Promise<string> {
   const res = await fetch(`${BASE_URL}/posts`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${creds.accessToken}`,
       'Content-Type': 'application/json',
       'X-Restli-Protocol-Version': '2.0.0',
       'Linkedin-Version': LINKEDIN_VERSION,
     },
     body: JSON.stringify({
-      author: LINKEDIN_PERSON_URN,
+      author: creds.personUrn,
       commentary: text,
       visibility: 'PUBLIC',
       distribution: {
@@ -35,17 +36,16 @@ async function createPost(text: string): Promise<string> {
     throw new Error(err?.message ?? `Post creation failed (${res.status})`);
   }
 
-  // LinkedIn returns the post URN in the response header, not the body
   const postId = res.headers.get('x-restli-id') ?? 'unknown';
   return postId;
 }
 
-export async function postToLinkedIn(text: string): Promise<PostLinkedInResponse> {
-  if (!isLinkedInConfigured) {
-    return { success: false, error: 'LinkedIn API not configured' };
-  }
+export async function postToLinkedIn(
+  text: string,
+  creds: LinkedInCredentials
+): Promise<PostLinkedInResponse> {
   try {
-    const postId = await createPost(text);
+    const postId = await createPost(text, creds);
     return { success: true, postId };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
