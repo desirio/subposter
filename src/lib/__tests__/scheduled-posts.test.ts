@@ -1,32 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock Supabase clients
-const mockSingle = vi.fn()
-const mockSelect = vi.fn(() => ({ single: mockSingle }))
-const mockInsert = vi.fn(() => ({ select: mockSelect }))
-const mockEq = vi.fn()
-const mockUpdate = vi.fn()
-const mockDelete = vi.fn()
-const mockOrder = vi.fn()
-const mockLte = vi.fn()
-
-function buildQueryChain(data: unknown, error: unknown = null) {
-  const chain = {
-    eq: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    lte: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data, error }),
-    then: undefined as unknown,
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-  }
-  // For queries that don't call .single() (like getUserScheduledPosts)
-  // make the chain itself resolve
-  return chain
-}
-
 const mockFrom = vi.fn()
 
 vi.mock('@/lib/supabase/server', () => ({
