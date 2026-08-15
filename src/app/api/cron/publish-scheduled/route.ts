@@ -7,10 +7,17 @@ import { postToLinkedIn } from '@/lib/linkedin'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
+  // Verify cron secret (header or query param)
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { searchParams } = new URL(request.url)
+  const querySecret = searchParams.get('secret')
+  const cronSecret = process.env.CRON_SECRET
+
+  if (cronSecret) {
+    const isAuthed = authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret
+    if (!isAuthed) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
   try {
