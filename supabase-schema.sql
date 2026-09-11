@@ -114,13 +114,19 @@ CREATE POLICY "Users can insert own profile"
   ON user_profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Auto-create profile on signup
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+-- search_path must be pinned: this runs as the auth service, which can't see
+-- the public schema, so an unqualified table name makes every signup fail.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
-  INSERT INTO user_profiles (id) VALUES (NEW.id);
+  INSERT INTO public.user_profiles (id) VALUES (NEW.id);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
