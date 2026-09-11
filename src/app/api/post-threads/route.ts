@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { postSingleThreadsPost, postThreadsThread } from '@/lib/threads';
 import { PostThreadsRequest } from '@/lib/types';
 import { getAuthenticatedUser, getUserPlatformTokens, unauthorizedResponse, notConnectedResponse } from '@/lib/auth-helpers';
+import { getValidThreadsToken } from '@/lib/token-refresh';
 
 export async function GET() {
   const user = await getAuthenticatedUser();
@@ -14,8 +15,8 @@ export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser();
   if (!user) return unauthorizedResponse();
 
-  const tokens = await getUserPlatformTokens(user.id, 'threads');
-  if (!tokens) return notConnectedResponse('Threads');
+  const creds = await getValidThreadsToken(user.id);
+  if (!creds) return notConnectedResponse('Threads');
 
   try {
     const body: PostThreadsRequest = await request.json();
@@ -25,7 +26,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'tweets array is required' }, { status: 400 });
     }
 
-    const creds = { accessToken: tokens.accessToken, userId: tokens.platformUserId! };
     const result = format === 'single'
       ? await postSingleThreadsPost(tweets[0], creds)
       : await postThreadsThread(tweets, creds);

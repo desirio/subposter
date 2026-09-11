@@ -1,5 +1,9 @@
 -- SubPoster Database Schema
 -- Run this in Supabase Dashboard > SQL Editor
+--
+-- New project: run this file, then supabase/cron.sql to schedule publishing.
+-- Existing project: run any files in supabase/migrations/ you haven't run yet;
+-- this file already includes all of them. See SETUP_SCHEDULING.md.
 -- ============================================
 
 -- 1. Social connections (encrypted OAuth tokens per user per platform)
@@ -49,7 +53,8 @@ CREATE TABLE scheduled_posts (
   format TEXT NOT NULL CHECK (format IN ('single', 'thread')),
   content JSONB NOT NULL,  -- { tweets: string[] }
 
-  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'posted', 'failed')),
+  -- 'publishing' = claimed by a cron run; see src/lib/supabase/scheduled-posts.ts
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'scheduled', 'publishing', 'posted', 'failed')),
   scheduled_at TIMESTAMPTZ,
   posted_at TIMESTAMPTZ,
   error_message TEXT,

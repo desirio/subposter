@@ -15,8 +15,11 @@ import {
   getUserScheduledPosts,
   updateScheduledPost,
   deleteScheduledPost,
-  getPostsDueForPublishing,
+  claimDuePosts,
+  completePublishing,
+  failStalePublishingPosts,
 } from '@/lib/supabase/scheduled-posts'
+import { mockQuery } from '@/test/supabase-query-mock'
 
 describe('createScheduledPost', () => {
   beforeEach(() => {
@@ -169,22 +172,101 @@ describe('deleteScheduledPost', () => {
   })
 })
 
-describe('getPostsDueForPublishing', () => {
+describe('claimDuePosts', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('returns scheduled posts due for publishing', async () => {
-    const posts = [{ id: '1', status: 'scheduled' }]
-    const chain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      lte: vi.fn().mockResolvedValue({ data: posts, error: null }),
-    }
-    mockFrom.mockReturnValue(chain)
+  it('finds due scheduled posts, then claims them only if still scheduled', async () => {
+    const due = mockQuery({ data: [{ id: 'a' }, { id: 'b' }] })
+    const claimed = [{ id: 'a', status: 'publishing' }, { id: 'b', status: 'publishing' }]
+    const claim = mockQuery({ data: claimed })
+    mockFrom.mockReturnValueOnce(due.builder).mockReturnValueOnce(claim.builder)
 
-    const result = await getPostsDueForPublishing()
+    const result = await claimDuePosts()
 
-    expect(result).toEqual(posts)
+    expect(result).toEqual(claimed)
+    expect(due.argsOf('eq')).toContainEqual(['status', 'scheduled'])
+    expect(due.argsOf('lte')[0][0]).toBe('scheduled_at')
+    expect(due.argsOf('limit')).toEqual([[25]])
+
+    expect(claim.argsOf('update')[0][0]).toMatchObject({ status: 'publishing' })
+    expect(claim.argsOf('in')).toEqual([['id', ['a', 'b']]])
+    // The status guard on the UPDATE is what stops two runs claiming the same post
+    expect(claim.argsOf('eq')).toContainEqual(['status', 'scheduled'])
+  })
+
+  it('returns only the posts this run won when another run claimed some first', async () => {
+    const due = mockQuery({ data: [{ id: 'a' }, { id: 'b' }] })
+    const claim = mockQuery({ data: [{ id: 'b', status: 'publishing' }] })
+    mockFrom.mockReturnValueOnce(due.builder).mockReturnValueOnce(claim.builder)
+
+    const result = await claimDuePosts()
+
+    expect(result.map((p) => p.id)).toEqual(['b'])
+  })
+
+  it('does not run an update when nothing is due', async () => {
+    mockFrom.mockReturnValueOnce(mockQuery({ data: [] }).builder)
+
+    const result = await claimDuePosts()
+
+    expect(result).toEqual([])
+    expect(mockFrom).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws when the claim fails', async () => {
+    mockFrom
+      .mockReturnValueOnce(mockQuery({ data: [{ id: 'a' }] }).builder)
+      .mockReturnValueOnce(mockQuery({ error: new Error('constraint violation') }).builder)
+
+    await expect(claimDuePosts()).rejects.toThrow('constraint violation')
+  })
+})
+
+describe('completePublishing', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('marks a successful post as posted with its platform id', async () => {
+    const q = mockQuery({})
+    mockFrom.mockReturnValue(q.builder)
+
+    await completePublishing('post-1', { success: true, platformPostId: 'tw-9' })
+
+    const update = q.argsOf('update')[0][0] as Record<string, unknown>
+    expect(update).toMatchObject({ status: 'posted', platform_post_id: 'tw-9', error_message: null })
+    expect(update.posted_at).toEqual(expect.any(String))
+    expect(q.argsOf('eq')).toEqual([['id', 'post-1'], ['status', 'publishing']])
+  })
+
+  it('marks a failed post as failed with the error', async () => {
+    const q = mockQuery({})
+    mockFrom.mockReturnValue(q.builder)
+
+    await completePublishing('post-1', { success: false, error: 'Rate limited' })
+
+    expect(q.argsOf('update')[0][0]).toMatchObject({ status: 'failed', error_message: 'Rate limited' })
+  })
+})
+
+describe('failStalePublishingPosts', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('fails posts stuck in publishing longer than the cutoff and returns the count', async () => {
+    const q = mockQuery({ data: [{ id: 'x' }, { id: 'y' }] })
+    mockFrom.mockReturnValue(q.builder)
+
+    const count = await failStalePublishingPosts(10 * 60 * 1000)
+
+    expect(count).toBe(2)
+    expect(q.argsOf('update')[0][0]).toMatchObject({ status: 'failed' })
+    expect(q.argsOf('eq')).toEqual([['status', 'publishing']])
+    const [column, cutoff] = q.argsOf('lt')[0] as [string, string]
+    expect(column).toBe('updated_at')
+    expect(Date.now() - new Date(cutoff).getTime()).toBeGreaterThanOrEqual(10 * 60 * 1000 - 1000)
   })
 })

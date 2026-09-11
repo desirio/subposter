@@ -111,14 +111,78 @@ export async function deleteScheduledPost(userId: string, postId: string) {
   if (error) throw error
 }
 
-export async function getPostsDueForPublishing(): Promise<ScheduledPost[]> {
+// --- Publishing (cron only: these use the admin client and bypass RLS) ---
+
+const CLAIM_BATCH_SIZE = 25
+const STALE_CLAIM_MS = 10 * 60 * 1000
+
+/**
+ * Move due posts from 'scheduled' to 'publishing' and return them. The UPDATE
+ * re-checks status, so overlapping cron runs can never claim the same post twice.
+ */
+export async function claimDuePosts(limit = CLAIM_BATCH_SIZE): Promise<ScheduledPost[]> {
   const supabase = createAdminClient()
+  const now = new Date().toISOString()
+
+  const { data: due, error: selectError } = await supabase
+    .from('scheduled_posts')
+    .select('id')
+    .eq('status', 'scheduled')
+    .lte('scheduled_at', now)
+    .order('scheduled_at', { ascending: true })
+    .limit(limit)
+
+  if (selectError) throw selectError
+  if (!due || due.length === 0) return []
+
   const { data, error } = await supabase
     .from('scheduled_posts')
-    .select('*')
+    .update({ status: 'publishing', updated_at: now })
+    .in('id', due.map((p: { id: string }) => p.id))
     .eq('status', 'scheduled')
-    .lte('scheduled_at', new Date().toISOString())
+    .select('*')
 
   if (error) throw error
   return (data as ScheduledPost[]) ?? []
+}
+
+export async function completePublishing(
+  postId: string,
+  result: { success: true; platformPostId?: string } | { success: false; error: string }
+) {
+  const supabase = createAdminClient()
+  const now = new Date().toISOString()
+  const updates = result.success
+    ? { status: 'posted', posted_at: now, platform_post_id: result.platformPostId ?? null, error_message: null }
+    : { status: 'failed', error_message: result.error }
+
+  const { error } = await supabase
+    .from('scheduled_posts')
+    .update({ ...updates, updated_at: now })
+    .eq('id', postId)
+    .eq('status', 'publishing')
+
+  if (error) throw error
+}
+
+/**
+ * A post stuck in 'publishing' means a run died mid-publish. It is marked failed
+ * rather than retried, because part of it may already be live.
+ */
+export async function failStalePublishingPosts(staleAfterMs = STALE_CLAIM_MS): Promise<number> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('scheduled_posts')
+    .update({
+      status: 'failed',
+      error_message:
+        'Publishing was interrupted. Check the platform before retrying, as part of this post may already be live.',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('status', 'publishing')
+    .lt('updated_at', new Date(Date.now() - staleAfterMs).toISOString())
+    .select('id')
+
+  if (error) throw error
+  return data?.length ?? 0
 }

@@ -18,7 +18,7 @@ export function unauthorizedResponse() {
 
 export function notConnectedResponse(platform: string) {
   return NextResponse.json(
-    { success: false, error: `${platform} not connected. Go to Settings to connect.` },
+    { success: false, error: `${platform} not connected or its login has expired. Reconnect it in Settings.` },
     { status: 403 }
   )
 }

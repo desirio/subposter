@@ -17,6 +17,7 @@ interface ScheduledPost {
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-600',
   scheduled: 'bg-yellow-600',
+  publishing: 'bg-blue-600',
   posted: 'bg-green-600',
   failed: 'bg-red-600',
 };

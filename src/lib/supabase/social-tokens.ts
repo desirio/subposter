@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from './server'
 import { encrypt, decrypt } from '../crypto'
 
@@ -19,8 +20,13 @@ export interface DecryptedTokens {
   tokenExpiresAt?: Date
 }
 
-export async function saveConnection(userId: string, conn: SocialConnectionInput) {
-  const supabase = createClient()
+// Functions that take `supabase` default to the cookie-bound client, which only
+// works inside a user's request. Background jobs must pass the admin client.
+export async function saveConnection(
+  userId: string,
+  conn: SocialConnectionInput,
+  supabase: SupabaseClient = createClient()
+) {
   const { encrypted: access_token_encrypted, iv: access_token_iv } = encrypt(conn.accessToken)
 
   let refresh_token_encrypted: string | null = null
@@ -53,9 +59,9 @@ export async function saveConnection(userId: string, conn: SocialConnectionInput
 
 export async function getDecryptedTokens(
   userId: string,
-  platform: string
+  platform: string,
+  supabase: SupabaseClient = createClient()
 ): Promise<DecryptedTokens | null> {
-  const supabase = createClient()
   const { data, error } = await supabase
     .from('social_connections')
     .select('*')
