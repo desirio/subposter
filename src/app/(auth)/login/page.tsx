@@ -63,7 +63,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
             placeholder="you@example.com"
           />
         </div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
             placeholder="••••••••"
           />
         </div>
@@ -91,17 +91,17 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+          className="w-full py-2 px-4 bg-brand-500 hover:bg-brand-400 disabled:bg-brand-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
 
       <div className="mt-4 flex items-center justify-between text-sm">
-        <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300">
+        <Link href="/forgot-password" className="text-brand-400 hover:text-brand-300">
           Forgot password?
         </Link>
-        <Link href="/register" className="text-blue-400 hover:text-blue-300">
+        <Link href="/register" className="text-brand-400 hover:text-brand-300">
           Create account
         </Link>
       </div>

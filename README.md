@@ -2,35 +2,49 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Pull environment variables from Vercel
+
+Environment variables are managed in Vercel (source of truth). Pull them locally:
+
+```bash
+npx vercel env pull .env.local
+```
+
+> You need the [Vercel CLI](https://vercel.com/docs/cli) and to be linked to the project (`npx vercel link`).
+> **Re-run this command whenever env vars are updated in Vercel.**
+
+### 3. Local overrides (optional)
+
+To override specific vars for local development (e.g. your own Anthropic key, localhost URL), create a `.env.development.local` file:
+
+```
+ANTHROPIC_API_KEY=sk-ant-your-own-key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Next.js loads env files in this order (later files override earlier ones):
+`.env` → `.env.local` → `.env.development` → `.env.development.local`
+
+### 4. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. Run tests
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm test
+```
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The `main` branch auto-deploys on merge. Environment variables are configured in the Vercel project settings.

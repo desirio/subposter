@@ -16,12 +16,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const VALID_PLATFORMS = ['x', 'threads', 'linkedin']
+const VALID_FORMATS = ['single', 'thread']
+
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser()
   if (!user) return unauthorizedResponse()
 
   try {
     const body = await request.json()
+    const { platform, format, content } = body
+
+    if (!platform || !VALID_PLATFORMS.includes(platform)) {
+      return NextResponse.json({ error: 'Invalid or missing platform' }, { status: 400 })
+    }
+    if (!format || !VALID_FORMATS.includes(format)) {
+      return NextResponse.json({ error: 'Invalid or missing format' }, { status: 400 })
+    }
+    if (!content?.tweets || !Array.isArray(content.tweets) || content.tweets.length === 0) {
+      return NextResponse.json({ error: 'content.tweets must be a non-empty array' }, { status: 400 })
+    }
+
     const post = await createScheduledPost(user.id, body)
     return NextResponse.json({ post }, { status: 201 })
   } catch (err) {

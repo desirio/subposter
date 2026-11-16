@@ -108,3 +108,34 @@ export interface AgentChatResponse {
   sessionId: string;
   error?: string;
 }
+
+// --- Onboarding types ---
+
+export type PricingPlan = 'starter' | 'plus' | 'pro';
+export type BillingInterval = 'monthly' | 'annual';
+export type OnboardingStep = 1 | 2 | 3 | 4;
+
+export interface UsageLimits {
+  articlesPerMonth: number;
+  chatMessagesPerMonth: number;
+  socialAccounts: number;
+  users: number;
+}
+
+export interface UserProfile {
+  id: string;
+  display_name: string | null;
+  substack_url: string | null;
+  content_focus: string | null;
+  selected_plan: PricingPlan;
+  billing_interval: BillingInterval;
+  onboarding_completed: boolean;
+  onboarding_step: OnboardingStep;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  articles_used: number;
+  chat_messages_used: number;
+  usage_reset_at: string;
+  created_at: string;
+  updated_at: string;
+}

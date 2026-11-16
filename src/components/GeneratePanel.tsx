@@ -121,9 +121,14 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
 
   if (!selectedPost) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-24 text-center">
-        <div className="text-4xl mb-4">✦</div>
-        <p className="text-gray-400 text-sm">Select a post from the left to get started</p>
+      <div className="flex flex-col items-center justify-center h-full py-24 text-center px-4">
+        <div className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center mb-3">
+          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+        </div>
+        <p className="text-sm text-gray-400 font-medium">Select an article to generate posts</p>
+        <p className="text-xs text-gray-600 mt-1">Load your feed on the left, then pick an article</p>
       </div>
     );
   }
@@ -131,41 +136,44 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Selected post info */}
-      <div className="p-3 bg-gray-900 border border-gray-700 rounded-lg">
-        <p className="text-xs text-gray-400 mb-1">Selected post</p>
-        <p className="text-sm font-medium text-gray-200 line-clamp-1">{selectedPost.title}</p>
+      <div className="flex items-center gap-3 p-3 bg-gray-900 border border-gray-800 rounded-xl">
+        <div className="w-1 h-8 bg-brand-500 rounded-full shrink-0" />
+        <div className="min-w-0">
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">Selected</p>
+          <p className="text-sm font-medium text-gray-200 line-clamp-1">{selectedPost.title}</p>
+        </div>
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col gap-3 p-4 bg-gray-900 border border-gray-700 rounded-lg">
+      <div className="flex flex-col gap-3 p-4 bg-gray-900 border border-gray-800 rounded-xl">
         {/* Format checkboxes */}
         <div>
-          <p className="text-xs text-gray-400 mb-2">Format</p>
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider font-medium mb-2">Format</p>
           <div className="flex gap-4">
             {(['single', 'thread'] as TweetFormat[]).map((fmt) => (
-              <label key={fmt} className="flex items-center gap-2 cursor-pointer">
+              <label key={fmt} className="flex items-center gap-2 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={formats.includes(fmt)}
                   onChange={() => toggleFormat(fmt)}
-                  className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-500 cursor-pointer"
+                  className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-brand-500 cursor-pointer focus:ring-brand-500/40 focus:ring-offset-0"
                 />
-                <span className="text-sm text-gray-300 capitalize">
+                <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
                   {fmt === 'single' ? 'Single Post' : 'Thread'}
                 </span>
               </label>
             ))}
           </div>
-          <p className="text-xs text-gray-600 mt-1">Thread format is not supported on LinkedIn</p>
+          <p className="text-[11px] text-gray-600 mt-1.5">Thread format is not supported on LinkedIn</p>
         </div>
 
         {/* Tone selector */}
         <div>
-          <p className="text-xs text-gray-400 mb-2">Tone</p>
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider font-medium mb-2">Tone</p>
           <select
             value={tone}
             onChange={(e) => setTone(e.target.value as TweetTone)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-gray-200 focus:outline-none focus:border-brand-500/60 appearance-none cursor-pointer"
           >
             {TONES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
@@ -174,38 +182,42 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
         </div>
 
         {/* Include link toggle */}
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer group">
           <input
             type="checkbox"
             checked={includeLink}
             onChange={(e) => setIncludeLink(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-500 cursor-pointer"
+            className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-brand-500 cursor-pointer focus:ring-brand-500/40 focus:ring-offset-0"
           />
-          <span className="text-sm text-gray-300">Include article link</span>
+          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Include article link</span>
         </label>
 
         {/* Generate button */}
         <button
           onClick={handleGenerate}
           disabled={!canGenerate}
-          className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm font-semibold rounded-lg transition-colors"
+          className="w-full py-3 bg-brand-500 hover:bg-brand-400 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-brand-500/10 disabled:shadow-none"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
               Generating...
             </span>
           ) : (
             'Generate Variants'
           )}
         </button>
-        <p className="text-xs text-gray-500 text-center">
-          Generate once — then choose to post to X, Threads, or LinkedIn
+        <p className="text-[11px] text-gray-600 text-center">
+          Generate once — then post to X, Threads, or LinkedIn
         </p>
       </div>
 
       {error && (
-        <div className="px-3 py-2 bg-red-900/50 border border-red-700 rounded-lg text-sm text-red-300">
+        <div className="px-3 py-2.5 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-300">
           {error}
         </div>
       )}
@@ -222,15 +234,15 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
       {variants.length > 0 && (
         <div>
           {/* Platform tab switcher */}
-          <div className="flex gap-1 mb-3 p-1 bg-gray-900 border border-gray-700 rounded-lg">
+          <div className="flex gap-0.5 mb-3 p-0.5 bg-gray-900/80 border border-gray-800 rounded-xl">
             {(['x', 'threads', 'linkedin'] as const).map((platform) => (
               <button
                 key={platform}
                 onClick={() => setActivePlatform(platform)}
-                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
                   activePlatform === platform
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-gray-200'
+                    ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
                 {platform === 'x' ? 'X' : platform === 'threads' ? 'Threads' : 'LinkedIn'}
@@ -245,10 +257,10 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors capitalize ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                   activeTab === tab
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    ? 'bg-brand-500 text-white'
+                    : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
                 {tab === 'all' ? 'All' : tab === 'single' ? 'Single Posts' : 'Threads'}
@@ -258,9 +270,9 @@ export default function GeneratePanel({ selectedPost }: GeneratePanelProps) {
             <button
               onClick={handleGenerate}
               disabled={loading}
-              className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white bg-gray-900 border border-gray-800 hover:bg-gray-800 disabled:opacity-50 rounded-lg transition-all"
             >
-              {loading ? 'Generating...' : '↺ Regenerate'}
+              {loading ? 'Generating...' : 'Regenerate'}
             </button>
           </div>
 

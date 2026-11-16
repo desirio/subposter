@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-helpers'
 import { saveConnection } from '@/lib/supabase/social-tokens'
+import { isOnboardingCompleted } from '@/lib/supabase/user-profile'
 
 export async function GET(request: NextRequest) {
   const user = await getAuthenticatedUser()
@@ -79,7 +80,9 @@ export async function GET(request: NextRequest) {
       scopes: 'threads_basic,threads_content_publish',
     })
 
-    const response = NextResponse.redirect(new URL('/settings?connected=threads', request.url))
+    const onboarded = await isOnboardingCompleted(user.id)
+    const successUrl = onboarded ? '/settings?connected=threads' : '/onboarding/connect?connected=threads'
+    const response = NextResponse.redirect(new URL(successUrl, request.url))
     response.cookies.delete('threads_oauth_state')
     return response
   } catch (err) {

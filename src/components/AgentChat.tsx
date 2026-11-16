@@ -139,34 +139,38 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
         : platformConfig.linkedin;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)]">
+    <div className="flex flex-col h-full">
       {/* Context bar */}
       {selectedPost && (
-        <div className="flex items-center justify-between px-3 py-2 mb-3 bg-blue-950/40 border border-blue-800/50 rounded-lg">
+        <div className="flex items-center gap-3 px-3 py-2 mb-3 bg-brand-950/30 border border-brand-800/40 rounded-xl">
+          <div className="w-1 h-8 bg-brand-500 rounded-full shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-blue-400">Context article</p>
+            <p className="text-[11px] text-brand-400/80 uppercase tracking-wider font-medium">Context</p>
             <p className="text-sm text-gray-200 truncate">{selectedPost.title}</p>
           </div>
           <button
             onClick={() => onSelectPost(null)}
-            className="ml-2 text-gray-500 hover:text-gray-300 text-lg leading-none"
+            className="p-1 text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded-md shrink-0"
+            aria-label="Remove context"
           >
-            x
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
       )}
 
       {/* Platform selector + Queue toggle */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="flex gap-1 p-1 bg-gray-900 border border-gray-700 rounded-lg">
+        <div className="flex gap-0.5 p-0.5 bg-gray-900/80 border border-gray-800 rounded-xl">
           {(['x', 'threads', 'linkedin'] as const).map((platform) => (
             <button
               key={platform}
               onClick={() => setActivePlatform(platform)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-lg transition-all ${
                 activePlatform === platform
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-gray-200'
+                  ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
               {platform === 'x' ? 'X' : platform === 'threads' ? 'Threads' : 'LinkedIn'}
@@ -176,7 +180,11 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
         {queueItems.length > 0 && (
           <button
             onClick={() => setShowQueue(!showQueue)}
-            className="px-3 py-1 text-xs font-medium bg-green-900/50 border border-green-700/50 text-green-400 rounded-lg hover:bg-green-900/70 transition-colors"
+            className={`px-3 py-1.5 text-xs font-medium rounded-xl transition-all ${
+              showQueue
+                ? 'bg-green-500/20 border border-green-500/40 text-green-400'
+                : 'bg-gray-900/80 border border-gray-800 text-gray-400 hover:text-green-400'
+            }`}
           >
             Queue ({queueItems.length})
           </button>
@@ -204,12 +212,17 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
       )}
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto mb-3 space-y-4">
+      <div className="flex-1 overflow-y-auto mb-3 space-y-4 min-h-0">
         {messages.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="text-3xl mb-3">SubAgent</div>
-            <p className="text-gray-400 text-sm mb-6">
-              Your AI content strategist. Ask me to repurpose articles, analyze your voice, plan campaigns, or suggest content ideas.
+          <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
+            <div className="w-12 h-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-display font-semibold text-white mb-1">Your content strategist</h3>
+            <p className="text-sm text-gray-400 max-w-sm mb-6 leading-relaxed">
+              Repurpose articles, refine your voice, plan campaigns, or brainstorm ideas.
             </p>
             {/* Skill starter chips */}
             <div className="flex flex-wrap gap-2 justify-center max-w-md">
@@ -217,7 +230,7 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
                 <button
                   key={s.label}
                   onClick={() => handleSend(s.prompt)}
-                  className="px-3 py-1.5 text-xs bg-gray-800 border border-gray-700 text-gray-300 rounded-full hover:bg-gray-700 hover:border-gray-600 transition-colors"
+                  className="px-3.5 py-2 text-xs bg-gray-900 border border-gray-800 text-gray-300 rounded-xl hover:bg-gray-800 hover:border-gray-700 hover:text-white transition-all"
                 >
                   {s.label}
                 </button>
@@ -229,10 +242,10 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[85%] ${
+              className={`max-w-[85%] sm:max-w-[75%] ${
                 msg.role === 'user'
-                  ? 'bg-blue-600 text-white rounded-2xl rounded-br-md px-4 py-2'
-                  : 'bg-gray-800 text-gray-100 rounded-2xl rounded-bl-md px-4 py-3'
+                  ? 'bg-brand-500 text-white rounded-2xl rounded-br-sm px-4 py-2.5'
+                  : 'bg-gray-900 border border-gray-800 text-gray-100 rounded-2xl rounded-bl-sm px-4 py-3'
               }`}
             >
               {/* Conversational text */}
@@ -241,7 +254,7 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
               {/* Generated content inline */}
               {msg.generatedContent?.map((gc) => (
                 <div key={gc.id} className="mt-3 space-y-3">
-                  <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                  <div className="text-[11px] text-gray-500 font-medium uppercase tracking-wider">
                     Generated from: {gc.skill}
                   </div>
                   {gc.variants.map((variant) => (
@@ -267,7 +280,7 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
                         <div className="flex gap-2 mt-1">
                           <button
                             onClick={() => handleApprove(variant)}
-                            className="px-3 py-1 text-xs bg-green-900/50 border border-green-700/50 text-green-400 rounded-lg hover:bg-green-900/70 transition-colors"
+                            className="px-3 py-1.5 text-xs bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-500/20 transition-all"
                           >
                             Add to Queue
                           </button>
@@ -284,9 +297,13 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-800 text-gray-400 rounded-2xl rounded-bl-md px-4 py-3">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
+            <div className="bg-gray-900 border border-gray-800 text-gray-400 rounded-2xl rounded-bl-sm px-4 py-3">
+              <div className="flex items-center gap-2.5 text-sm">
+                <div className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
                 Thinking...
               </div>
             </div>
@@ -294,7 +311,7 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
         )}
 
         {error && (
-          <div className="px-3 py-2 bg-red-900/50 border border-red-700 rounded-lg text-sm text-red-300">
+          <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-300">
             {error}
           </div>
         )}
@@ -311,14 +328,17 @@ export default function AgentChat({ selectedPost, onSelectPost, platformConfig }
           onKeyDown={handleKeyDown}
           placeholder="Ask the agent anything..."
           rows={1}
-          className="flex-1 px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+          className="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500/60 focus:bg-gray-900/80 resize-none"
         />
         <button
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}
-          className="px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm font-medium rounded-xl transition-colors"
+          className="px-5 py-3 bg-brand-500 hover:bg-brand-400 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-brand-500/10 disabled:shadow-none"
         >
-          Send
+          <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+          </svg>
+          <span className="hidden sm:inline">Send</span>
         </button>
       </div>
     </div>

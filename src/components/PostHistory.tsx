@@ -14,7 +14,7 @@ interface ScheduledPost {
   created_at: string;
 }
 
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_STYLES: Record<string, string> = {
   draft: 'bg-gray-600',
   scheduled: 'bg-yellow-600',
   posted: 'bg-green-600',
@@ -58,8 +58,8 @@ export default function PostHistory() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+      <div className="flex items-center gap-2 flex-wrap">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
           Post History
         </h3>
         <div className="flex gap-1 ml-auto">
@@ -67,10 +67,10 @@ export default function PostHistory() {
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-2 py-1 text-xs rounded-md transition-colors ${
+              className={`px-2.5 py-1 text-xs rounded-lg transition-all ${
                 filter === s
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-gray-200 bg-gray-800'
+                  ? 'bg-brand-500 text-white'
+                  : 'text-gray-500 hover:text-white bg-gray-900 border border-gray-800 hover:bg-gray-800'
               }`}
             >
               {s || 'All'}
@@ -79,20 +79,23 @@ export default function PostHistory() {
         </div>
       </div>
 
-      {loading && <p className="text-xs text-gray-500">Loading...</p>}
+      {loading && <p className="text-xs text-gray-600">Loading...</p>}
 
       {!loading && posts.length === 0 && (
-        <p className="text-xs text-gray-500">No posts yet.</p>
+        <div className="text-center py-8">
+          <p className="text-sm text-gray-500">No posts yet</p>
+          <p className="text-xs text-gray-600 mt-1">Your drafts, scheduled, and posted content will appear here</p>
+        </div>
       )}
 
       <div className="space-y-2">
         {posts.map((post) => (
           <div
             key={post.id}
-            className="p-3 bg-gray-900 border border-gray-800 rounded-lg"
+            className="p-3 bg-gray-900 border border-gray-800 rounded-xl"
           >
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`px-1.5 py-0.5 text-[10px] font-medium text-white rounded ${STATUS_COLORS[post.status]}`}>
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span className={`px-1.5 py-0.5 text-[10px] font-semibold text-white rounded-md uppercase tracking-wider ${STATUS_STYLES[post.status]}`}>
                 {post.status}
               </span>
               <span className="text-xs text-gray-500">
@@ -105,32 +108,32 @@ export default function PostHistory() {
                 {new Date(post.created_at).toLocaleDateString()}
               </span>
             </div>
-            <p className="text-sm text-gray-300 line-clamp-2">
+            <p className="text-sm text-gray-300 line-clamp-2 leading-relaxed">
               {post.content.tweets[0]}
             </p>
             {post.scheduled_at && post.status === 'scheduled' && (
-              <p className="text-xs text-yellow-500 mt-1">
+              <p className="text-xs text-yellow-400 mt-1.5">
                 Scheduled for {new Date(post.scheduled_at).toLocaleString()}
               </p>
             )}
             {post.posted_at && (
-              <p className="text-xs text-green-500 mt-1">
+              <p className="text-xs text-green-400 mt-1.5">
                 Posted {new Date(post.posted_at).toLocaleString()}
               </p>
             )}
             {post.error_message && (
-              <p className="text-xs text-red-400 mt-1">{post.error_message}</p>
+              <p className="text-xs text-red-400 mt-1.5">{post.error_message}</p>
             )}
-            <div className="mt-2 flex gap-1">
-              {(post.status === 'draft' || post.status === 'failed') && (
+            {(post.status === 'draft' || post.status === 'failed') && (
+              <div className="mt-2 flex gap-1">
                 <button
                   onClick={() => handleDelete(post.id)}
-                  className="px-2 py-0.5 text-xs text-red-400 hover:text-red-300 bg-gray-800 rounded transition-colors"
+                  className="px-2.5 py-1 text-xs text-red-400 hover:text-red-300 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 rounded-lg transition-all"
                 >
                   Delete
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

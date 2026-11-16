@@ -8,4 +8,46 @@ html {
 
 body {
   @apply bg-gray-950 text-gray-100;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection */
+::selection {
+  @apply bg-brand-500/30 text-white;
+}
+
+/* Focus-visible for all interactive elements */
+*:focus-visible {
+  @apply outline-none ring-2 ring-brand-500/60 ring-offset-2 ring-offset-gray-950;
+}
+
+/* Custom scrollbar — dark, slim, unobtrusive */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(55 65 81) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(55 65 81);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(75 85 99);
+}
+
+/* Smooth transitions on interactive elements */
+button, a, input, textarea, select {
+  @apply transition-colors duration-150;
+}
+
+/* Better datetime-local inputs in dark mode */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
 }

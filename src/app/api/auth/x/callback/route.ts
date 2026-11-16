@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TwitterApi } from 'twitter-api-v2'
 import { getAuthenticatedUser } from '@/lib/auth-helpers'
 import { saveConnection } from '@/lib/supabase/social-tokens'
+import { isOnboardingCompleted } from '@/lib/supabase/user-profile'
 
 export async function GET(request: NextRequest) {
   const user = await getAuthenticatedUser()
@@ -42,7 +43,9 @@ export async function GET(request: NextRequest) {
       scopes: 'tweet.read,tweet.write,users.read,offline.access',
     })
 
-    const response = NextResponse.redirect(new URL('/settings?connected=x', request.url))
+    const onboarded = await isOnboardingCompleted(user.id)
+    const successUrl = onboarded ? '/settings?connected=x' : '/onboarding/connect?connected=x'
+    const response = NextResponse.redirect(new URL(successUrl, request.url))
     response.cookies.delete('x_oauth_verifier')
     response.cookies.delete('x_oauth_state')
     return response
