@@ -17,24 +17,24 @@ function CharCountBar({ count }: { count: number }) {
   const pct = Math.min((count / max) * 100, 100);
   const overflowPct = count > max ? Math.min(((count - max) / 20) * 100, 100) : 0;
 
-  let barColor = 'bg-gray-500';
+  let barColor = 'bg-gray-600';
   if (count > 270) barColor = 'bg-red-500';
   else if (count > 240) barColor = 'bg-yellow-500';
 
   return (
-    <div className="mt-1">
-      <div className="w-full bg-gray-700 rounded-full h-1.5 overflow-hidden">
+    <div className="mt-1.5">
+      <div className="w-full bg-gray-800 rounded-full h-1 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${barColor}`}
           style={{ width: `${pct}%` }}
         />
       </div>
       {overflowPct > 0 && (
-        <div className="w-full bg-red-900 rounded-full h-1 mt-0.5 overflow-hidden">
+        <div className="w-full bg-red-900/50 rounded-full h-0.5 mt-0.5 overflow-hidden">
           <div className="h-full bg-red-400 rounded-full" style={{ width: `${overflowPct}%` }} />
         </div>
       )}
-      <div className={`text-right text-xs mt-0.5 ${count > 280 ? 'text-red-400' : count > 240 ? 'text-yellow-400' : 'text-gray-500'}`}>
+      <div className={`text-right text-[11px] mt-1 ${count > 280 ? 'text-red-400' : count > 240 ? 'text-yellow-400' : 'text-gray-600'}`}>
         {count} / {max}
       </div>
     </div>
@@ -118,18 +118,18 @@ export default function TweetPreview({ variant, onPost, isPosting, isConfigured,
   }
 
   return (
-    <div className="p-4 bg-gray-900 border border-gray-700 rounded-lg">
-      <div className="text-xs font-medium text-gray-400 mb-2">{variant.label}</div>
+    <div className="p-4 bg-gray-900 border border-gray-800 rounded-xl">
+      <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">{variant.label}</div>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full bg-gray-800 text-gray-100 text-sm font-mono rounded-lg p-3 border border-gray-700 focus:outline-none focus:border-blue-500 resize-none leading-relaxed"
+        className="w-full bg-gray-800/50 text-gray-100 text-sm font-mono rounded-lg p-3 border border-gray-800 focus:outline-none focus:border-brand-500/60 resize-none leading-relaxed"
         rows={4}
       />
       <CharCountBar count={charCount} />
 
       {saveStatus && (
-        <div className="mt-2 px-2 py-1 bg-green-900/30 border border-green-800 rounded text-xs text-green-400">
+        <div className="mt-2 px-2.5 py-1.5 bg-green-500/10 border border-green-500/30 rounded-lg text-xs text-green-400">
           {saveStatus}
         </div>
       )}
@@ -137,7 +137,7 @@ export default function TweetPreview({ variant, onPost, isPosting, isConfigured,
       <div className="flex gap-2 mt-3 flex-wrap">
         <button
           onClick={handleCopy}
-          className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-medium rounded-lg transition-colors"
+          className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition-all"
         >
           {copied ? 'Copied' : 'Copy'}
         </button>
@@ -146,23 +146,23 @@ export default function TweetPreview({ variant, onPost, isPosting, isConfigured,
           <button
             onClick={handlePost}
             disabled={isPosting || isOverLimit}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs font-medium rounded-lg transition-colors"
+            className="px-3 py-2 bg-brand-500 hover:bg-brand-400 disabled:bg-gray-800 disabled:text-gray-600 text-white text-xs font-medium rounded-lg transition-all"
           >
             {isPosting ? 'Posting...' : `Post to ${label}`}
           </button>
         ) : (
           <Link
             href="/settings"
-            className="px-3 py-1.5 bg-blue-900/50 border border-blue-700/50 text-blue-400 text-xs font-medium rounded-lg hover:bg-blue-900/70 transition-colors"
+            className="px-3 py-2 bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-medium rounded-lg hover:bg-brand-500/20 transition-all"
           >
-            Connect {label} to post
+            Connect {label}
           </Link>
         )}
 
         <button
           onClick={() => setScheduling(!scheduling)}
           disabled={saving}
-          className="px-3 py-1.5 text-yellow-400 border border-yellow-800 text-xs font-medium rounded-lg hover:bg-yellow-900/30 transition-colors"
+          className="px-3 py-2 text-yellow-400 bg-yellow-500/10 border border-yellow-500/30 text-xs font-medium rounded-lg hover:bg-yellow-500/20 transition-all"
         >
           Schedule
         </button>
@@ -170,7 +170,7 @@ export default function TweetPreview({ variant, onPost, isPosting, isConfigured,
         <button
           onClick={handleSaveDraft}
           disabled={saving}
-          className="px-3 py-1.5 text-gray-300 border border-gray-600 text-xs font-medium rounded-lg hover:bg-gray-700 transition-colors"
+          className="px-3 py-2 text-gray-400 bg-gray-800 border border-gray-700 text-xs font-medium rounded-lg hover:bg-gray-700 hover:text-white transition-all"
         >
           {saving ? 'Saving...' : 'Save Draft'}
         </button>
@@ -178,9 +178,9 @@ export default function TweetPreview({ variant, onPost, isPosting, isConfigured,
 
       {/* Schedule picker */}
       {scheduling && (
-        <div className="mt-2 flex items-center gap-2 pt-2 border-t border-gray-700">
+        <div className="mt-3 flex flex-wrap items-center gap-2 pt-3 border-t border-gray-800">
           {!isConfigured && (
-            <p className="text-xs text-amber-500 mr-1">
+            <p className="text-xs text-amber-400 mr-1 w-full sm:w-auto">
               <Link href="/settings" className="underline">Connect {label}</Link> before the scheduled time
             </p>
           )}
@@ -188,18 +188,18 @@ export default function TweetPreview({ variant, onPost, isPosting, isConfigured,
             type="datetime-local"
             value={scheduleDate}
             onChange={(e) => setScheduleDate(e.target.value)}
-            className="px-2 py-1 text-xs bg-gray-900 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+            className="px-2.5 py-1.5 text-xs bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500/60"
           />
           <button
             onClick={handleSchedule}
             disabled={!scheduleDate || saving}
-            className="px-2.5 py-1 text-xs bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-md transition-colors"
+            className="px-3 py-1.5 text-xs bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-800 disabled:text-gray-600 text-white font-medium rounded-lg transition-all"
           >
             {saving ? 'Saving...' : 'Confirm'}
           </button>
           <button
             onClick={() => { setScheduling(false); setScheduleDate(''); }}
-            className="px-2 py-1 text-xs text-gray-400 hover:text-gray-200"
+            className="px-2.5 py-1.5 text-xs text-gray-500 hover:text-white transition-colors"
           >
             Cancel
           </button>

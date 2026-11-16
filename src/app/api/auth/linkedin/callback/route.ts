@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-helpers'
 import { saveConnection } from '@/lib/supabase/social-tokens'
+import { isOnboardingCompleted } from '@/lib/supabase/user-profile'
 
 export async function GET(request: NextRequest) {
   const user = await getAuthenticatedUser()
@@ -62,7 +63,9 @@ export async function GET(request: NextRequest) {
       scopes: 'openid,profile,w_member_social',
     })
 
-    const response = NextResponse.redirect(new URL('/settings?connected=linkedin', request.url))
+    const onboarded = await isOnboardingCompleted(user.id)
+    const successUrl = onboarded ? '/settings?connected=linkedin' : '/onboarding/connect?connected=linkedin'
+    const response = NextResponse.redirect(new URL(successUrl, request.url))
     response.cookies.delete('linkedin_oauth_state')
     return response
   } catch (err) {

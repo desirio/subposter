@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPostsDueForPublishing } from '@/lib/supabase/scheduled-posts'
-import { getDecryptedTokens } from '@/lib/supabase/social-tokens'
 import { postSingleTweet, postThread } from '@/lib/twitter'
 import { postSingleThreadsPost, postThreadsThread } from '@/lib/threads'
 import { postToLinkedIn } from '@/lib/linkedin'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getValidXToken, getValidLinkedInToken, getValidThreadsToken } from '@/lib/token-refresh'
 
 export async function GET(request: NextRequest) {
   // Verify cron secret (header or query param)
@@ -13,11 +13,13 @@ export async function GET(request: NextRequest) {
   const querySecret = searchParams.get('secret')
   const cronSecret = process.env.CRON_SECRET
 
-  if (cronSecret) {
-    const isAuthed = authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret
-    if (!isAuthed) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
+  }
+
+  const isAuthed = authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret
+  if (!isAuthed) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -28,41 +30,39 @@ export async function GET(request: NextRequest) {
 
     for (const post of posts) {
       try {
-        const tokens = await getDecryptedTokens(post.user_id, post.platform)
-        if (!tokens) {
-          await supabase
-            .from('scheduled_posts')
-            .update({
-              status: 'failed',
-              error_message: `${post.platform} not connected`,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', post.id)
-          failed++
-          continue
-        }
-
         const tweets = post.content.tweets
         let result: { success: boolean; error?: string; tweetId?: string; threadId?: string; postId?: string }
 
         switch (post.platform) {
           case 'x': {
-            const creds = { accessToken: tokens.accessToken }
+            const accessToken = await getValidXToken(post.user_id)
+            if (!accessToken) {
+              result = { success: false, error: 'X not connected or token expired' }
+              break
+            }
             result = post.format === 'thread'
-              ? await postThread(tweets, creds)
-              : await postSingleTweet(tweets[0], creds)
+              ? await postThread(tweets, { accessToken })
+              : await postSingleTweet(tweets[0], { accessToken })
             break
           }
           case 'threads': {
-            const creds = { accessToken: tokens.accessToken, userId: tokens.platformUserId! }
+            const tokens = await getValidThreadsToken(post.user_id)
+            if (!tokens) {
+              result = { success: false, error: 'Threads not connected or token expired' }
+              break
+            }
             result = post.format === 'thread'
-              ? await postThreadsThread(tweets, creds)
-              : await postSingleThreadsPost(tweets[0], creds)
+              ? await postThreadsThread(tweets, { accessToken: tokens.accessToken, userId: tokens.userId })
+              : await postSingleThreadsPost(tweets[0], { accessToken: tokens.accessToken, userId: tokens.userId })
             break
           }
           case 'linkedin': {
-            const creds = { accessToken: tokens.accessToken, personUrn: tokens.platformUserId! }
-            result = await postToLinkedIn(tweets[0], creds)
+            const tokens = await getValidLinkedInToken(post.user_id)
+            if (!tokens) {
+              result = { success: false, error: 'LinkedIn not connected or token expired' }
+              break
+            }
+            result = await postToLinkedIn(tweets[0], { accessToken: tokens.accessToken, personUrn: tokens.personUrn })
             break
           }
           default:

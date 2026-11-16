@@ -130,7 +130,7 @@ export async function handleAgentMessage(
 
   // Call Claude Sonnet
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-0',
     max_tokens: 4096,
     system: systemPrompt,
     messages,
