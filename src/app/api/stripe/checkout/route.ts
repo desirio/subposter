@@ -47,11 +47,13 @@ export async function POST(request: Request) {
     const stripe = getStripe()
     const profile = await getUserProfile(user.id)
 
+    const baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://www.desirio.co.uk'
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${request.headers.get('origin')}/onboarding/connect?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.headers.get('origin')}/onboarding/plan`,
+      success_url: `${baseUrl}/onboarding/connect?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/onboarding/plan`,
       subscription_data: {
         trial_period_days: 7,
         metadata: { userId: user.id, plan },
