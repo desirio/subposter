@@ -49,7 +49,7 @@ export default function Home() {
               </svg>
               <div className="hidden sm:block">
                 <h1 className="text-base font-display font-bold text-white tracking-tight leading-none">SubPoster</h1>
-                <p className="text-[11px] text-gray-500 leading-none mt-0.5">Powered by Claude</p>
+                <p className="text-[11px] text-gray-500 leading-none mt-0.5">Your articles, distributed by us</p>
               </div>
             </div>
 

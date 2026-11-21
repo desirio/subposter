@@ -28,7 +28,7 @@ export default function AuthLayout({
                 </svg>
                 <h1 className="text-2xl font-display font-bold text-white tracking-tight">SubPoster</h1>
               </div>
-              <p className="text-sm text-gray-500">Substack content, powered by Claude</p>
+              <p className="text-sm text-gray-500">Your articles, distributed by us</p>
             </div>
             {children}
           </div>
